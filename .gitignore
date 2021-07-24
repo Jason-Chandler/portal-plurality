@@ -4,3 +4,4 @@ package-lock.json
 .valtan-path
 .valtan-cache
 *.map
+www/playcanvas-stable.min.js

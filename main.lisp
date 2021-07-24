@@ -6,6 +6,6 @@
 (in-package :portal-plurality)
 
 (define-react-component <app> ()
-  (jsx (:h1 () "hello world")))
+  (jsx (:h1 () "")))
 
 (setup '<app> "root" :remote-eval t)
