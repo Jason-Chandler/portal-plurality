@@ -4,7 +4,7 @@
   (js:pc.create-script #jscript-name))
 
 (defmacro add-attribute (obj attr-name &rest attr-obj)
-  `((ffi:ref ,obj "attributes" "add") ,attr-name (ffi:object ,@attr-obj)))
+  `((ffi:ref ,obj "attributes" "add") #j,attr-name (ffi:object ,@attr-obj)))
 
 (defun symb->camel-case (sym)
   `(compiler::kebab-to-lower-camel-case (string ',sym)))
