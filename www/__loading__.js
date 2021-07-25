@@ -33,6 +33,15 @@ pc.script.createLoadingScreen(function (app) {
         splash.parentElement.removeChild(splash);
     };
 
+    var loadLisp = function () {
+      console.log('Loading Lisp');
+      var lispBody = document.createElement('script');
+      lispBody.setAttribute("type","text/javascript");
+      lispBody.setAttribute("src", "./dist/main.js");
+      document.body.appendChild(lispBody);
+      hideSplash();
+    };
+    
     var setProgress = function (value) {
         var bar = document.getElementById('progress-bar');
         if (bar) {
@@ -108,5 +117,5 @@ pc.script.createLoadingScreen(function (app) {
         app.off('preload:progress');
     });
     app.on('preload:progress', setProgress);
-    app.on('start', hideSplash);
+    app.on('start', loadLisp);
 });
