@@ -8,3 +8,6 @@
 
 (js:console.log (ffi:ref char-controller "attributes"))
 
+(js:console.log (vec3 :x 4 :y 5 :z 6))
+
+(js:console.log (find-by-name "Box"))

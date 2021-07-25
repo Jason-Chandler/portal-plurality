@@ -2,5 +2,7 @@
 
 (defsystem "portal-plurality"
   :serial t
-  :components ((:file "main"))
+  :components ((:file "package")
+               (:file "lib")
+               (:file "main"))
   :depends-on ("react-utilities"))
