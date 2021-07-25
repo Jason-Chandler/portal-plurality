@@ -8,4 +8,6 @@
 (define-react-component <app> ()
   (jsx (:h1 () "")))
 
+(js:console.log (ffi:object :a 3 :b 4))
+
 (setup '<app> "root" :remote-eval t)
