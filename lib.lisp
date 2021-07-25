@@ -1,19 +1,19 @@
 (in-package :portal-plurality)
 
 (defun create-script (script-name)
-  (js:pc.create-script script-name))
+  (js:pc.create-script #jscript-name))
 
 (defmacro add-attribute (obj attr-name &rest attr-obj)
   `((ffi:ref ,obj "attributes" "add") ,attr-name (ffi:object ,@attr-obj)))
 
-(defmacro symb->camel-case (sym)
+(defun symb->camel-case (sym)
   `(compiler::kebab-to-lower-camel-case (string ',sym)))
 
 (defmacro defprotomethod (slot-name proto lambda-list &body proto-fn)
-  `(ffi:set (ffi:ref ,proto "prototype" ,(symb->camel-case slot-name))
+  `(ffi:set (ffi:ref ,proto "prototype" ,(compiler::kebab-to-lower-camel-case 
+                                          (string slot-name)))
             (lambda (,@lambda-list) ,@proto-fn)))
 
-;; There already is ffi:new as it turns out, didn't need this. Whoops.
 (defmacro new (obj-type &rest args)
   `(let ((this (ffi:object)))
      (if (null (list ,@args))
@@ -31,9 +31,9 @@
   (flet ((set-pair (pair)
            (if (listp (car pair))
                `(ffi:set (ffi:ref ,@(car pair)) ,(cadr pair))
-               `(ffi:set (ffi:ref ,(car pair)) ,(cadr pair)))))
+               `(setf ,(car pair) ,(cadr pair)))))
     `(progn ,@(mapcar #'set-pair (loop for (key value) on forms by #'cddr
-                                     collect (list key value))))))
+                                     collect (list key value))))))q
    
 (defun add-scripts (ent script-list)
   (loop for script in script-list
