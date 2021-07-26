@@ -53,13 +53,13 @@
     (let ((app (ffi:ref js:this "app")))
       (if (not (ffi:ref js:this "camera"))
           (progn
-            (js-setf (js:this "camera") (new "Entity" #j"fps camera"))
+            (js-setf (js:this "camera") (ffi:new (ffi:ref "pc.Entity") #j"fps camera"))
             ((ffi:ref js:this "camera" "addComponent") "camera")
             ((ffi:ref js:this "entity" "addChild") (ffi:ref js:this "camera"))))
       (js-setf (js:this "x") (vec3)
                (js:this "z") (vec3)
                (js:this "heading") (vec3)
-               (js:this "magnitude") (new "Vec2")
+               (js:this "magnitude") (ffi:new (ffi:ref "pc.Vec2"))
                (js:this "azimuth") 0
                (js:this "elevation") 0
                (js:this "camera" "camera" "enabled") t)
@@ -69,7 +69,7 @@
         (js-setf (js:this "azimuth") (* ((ffi:ref "Math" "atan2") (- (ffi:ref temp "x"))
                                                                   (- (ffi:ref temp "z")))
                                         (/ 180 (ffi:ref "Math" "PI"))))
-        (let ((rot ((ffi:ref (new "Mat4")) "setFromAxisAngle" (ffi:ref js:pc "Vec3" "UP")
+        (let ((rot ((ffi:ref (ffi:new (ffi:ref "pc.Mat4"))) "setFromAxisAngle" (ffi:ref js:pc "Vec3" "UP")
                                            (- (ffi:ref js:this "azimuth")))))
           (js-setf (js:this elevation) (* ((ffi:ref "Math" atan) (ffi:ref temp "y") (ffi:ref temp "z"))
                                           (/ 180 (ffi:ref "Math" "PI"))))
@@ -203,12 +203,17 @@
           ((ffi:ref app "fire") #j"firstperson_reset")))))
 
 (add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
+(add-scripts box '("charcontroller"))
+(remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
 (remove-scripts box '("charcontroller"))
 (js:console.log (ffi:ref char-controller "attributes"))
 (js:console.log #jbox)
 
+(js:console.log box)
+(js:console.log (vec3))
+(js:console.log (ffi:ref (vec3 :x 4 :y 5 :z 6) "add2"))
+(js:console.log (ffi:ref box "setGuid"))
 
-(js:console.log (vec3 :x 4 :y 5 :z 6))
 (js:console.log char-controller)
 
 

@@ -25,7 +25,7 @@
            this))))
 
 (defun vec3 (&key (x 0) (y 0) (z 0))
-  (new "Vec3" x y z))
+  (ffi:new (ffi:ref "pc.Vec3") x y z))
 
 (defmacro js-setf (&rest forms)
   (flet ((set-pair (pair)
