@@ -76,7 +76,77 @@
           (js-setf (js:this "forward") 0
                    (js:this "strafe") 0
                    (js:this "jump") nil
-                   (js:this "cnt") 0))))))
+                   (js:this "cnt") 0)
+
+          ((ffi:ref app "on") #j"firstperson:forward"
+                              (lambda (val)
+                                (js-setf (js:this "forward") val))
+                              js:this)
+
+          ((ffi:ref app "on") #j"firstperson:strafe"
+                              (lambda (val)
+                                (js-setf (js:this "strafe") val))
+                              js:this)
+
+          ((ffi:ref app "on") #j"firstperson:look"
+                              (lambda (azimuth-delta elevation-delta)
+                                (incf (ffi:ref js:this "azimuth") azimuth-delta)
+                                (incf (ffi:ref js:this "elevation") elevation-delta)
+                                (js-setf (js:this "elevation") ((ffi:ref js:pc "math" "clamp") (ffi:ref js:this "elevation")
+                                                                                                       -90
+                                                                                                       90)))
+                              js:this)
+
+          ((ffi:ref app "on") #j"firstperson:jump"
+                              (lambda ()
+                                (js-setf (js:this "jump") t))
+                              js:this)
+
+          ((ffi:ref app "on") #j"firstperson:unlock"
+                              (lambda ()
+                                (js-setf (js:document "pointerLockElement") nil))
+                              js:this)))))
+
+  (defprotomethod post-update fps-cam (dt)
+    ((ffi:ref js:this "camera" "setEulerAngles") (ffi:ref js:this "elevation")
+                                                 (ffi:ref js:this "azimuth")
+                                                 0)
+    ((ffi:ref js:this "z" "copy") (ffi:ref js:this "camera" "forward"))
+    (js-setf (js:this "z" "y") 0)
+    ((ffi:ref js:this "z" "normalize"))
+    ((ffi:ref js:this "x" "copy") (ffi:ref js:this "camera" "right"))
+    (js-setf (js:this "x" "y") 0)
+    ((ffi:ref js:this "x" "normalize"))
+    ((ffi:ref js:this "heading" "set") 0 0 0)
+
+    (if (not (zerop (ffi:ref js:this "forward")))
+        (progn
+          ((ffi:ref js:this "z" "scale") (ffi:ref js:this "forward"))
+          ((ffi:ref js:this "heading" "add") (ffi:ref js:this "z"))))
+
+    (if (not (zerop (ffi:ref js:this "strafe")))
+        (progn
+          ((ffi:ref js:this "x" "scale") (ffi:ref js:this "strafe"))
+          ((ffi:ref js:this "heading" "add") (ffi:ref js:this "x"))))
+
+    (if (> ((ffi:ref js:this "heading" "length")) 0.0001)
+        (progn
+          ((ffi:ref js:this "magnitude" "set") (ffi:ref js:this "forward") (ffi:ref js:this "strafe"))
+          ((ffi:ref ((ffi:ref js:this "heading" "normalize")) "scale") ((ffi:ref js:this "magnitude" "length")))))
+
+    (if (ffi:ref js:this "jump")
+        (progn
+          ((ffi:ref js:this "entity" "script" "charcontroller" "jump"))
+          (js-setf (js:this "jump") nil)))
+
+    ((ffi:ref js:this "entity" "script" "charcontroller" "move") (ffi:ref js:this "heading"))
+
+    (let ((pos ((ffi:ref js:this "camera" "getPosition"))))
+      ((ffi:ref js:this "app" "fire") #j"cameramove" pos)))
+
+  (defparameter keyboard-input (create-script "keyboardinput"))
+
+  )
 
 (add-scripts box '("charcontroller"))
 (remove-scripts box '("charcontroller"))
