@@ -22,7 +22,7 @@
                 ((ffi:ref 
                   ((ffi:ref tmp cross) (ffi:ref js:this "groundNormal") direction)
                   cross) tmp (ffi:ref js:this "groundNormal"))
-                ((ffi:ref (ffi:ref tmp normalize) scale) (* len (ffi:ref js:this speed)))))
+                ((ffi:ref ((ffi:ref tmp normalize)) scale) (* len (ffi:ref js:this speed)))))
           (js-setf (js:this "entity" "rigidbody" "linearVelocity") tmp))))
 
   (defprotomethod jump char-controller (_)
@@ -40,7 +40,7 @@
       ((ffi:ref js:this "rayEnd" "add2") pos (ffi:ref js:this "groundCheckRay"))
       (let ((result ((ffi:ref js:this "app" "systems" "rigidbody" "raycastFirst") pos (ffi:ref js:this "rayEnd"))))
           (js-setf (js:this "onGround") result)
-          (if result
+        (if (not (eql  result js:null))
               ((ffi:ref js:this "groundNormal" "copy") (ffi:ref result "normal"))))))
 
   (defparameter fps-cam (create-script "firstpersoncamera"))
@@ -80,17 +80,17 @@
                    (js:this "cnt") 0)
 
           ((ffi:ref app "on") #j"firstperson:forward"
-                              (lambda (val)
+                              (lambda (val &rest placeholders)
                                 (js-setf (js:this "forward") val))
                               js:this)
 
           ((ffi:ref app "on") #j"firstperson:strafe"
-                              (lambda (val)
+                              (lambda (val &rest placeholders)
                                 (js-setf (js:this "strafe") val))
                               js:this)
 
           ((ffi:ref app "on") #j"firstperson:look"
-                              (lambda (azimuth-delta elevation-delta)
+                              (lambda (azimuth-delta elevation-delta &rest placeholders)
                                 (incf (ffi:ref js:this "azimuth") azimuth-delta)
                                 (incf (ffi:ref js:this "elevation") elevation-delta)
                                 (js-setf (js:this "elevation") ((ffi:ref js:pc "math" "clamp") (ffi:ref js:this "elevation")
@@ -122,25 +122,25 @@
 
     (if (not (zerop (ffi:ref js:this "forward")))
         (progn
-          ((ffi:ref js:this "z" "scale") (ffi:ref js:this "forward"))
-          ((ffi:ref js:this "heading" "add") (ffi:ref js:this "z"))))
+          ((ffi:ref (ffi:ref js:this "z") "scale") (ffi:ref js:this "forward"))
+          ((ffi:ref (ffi:ref js:this "heading") "add") (ffi:ref js:this "z"))))
 
     (if (not (zerop (ffi:ref js:this "strafe")))
         (progn
-          ((ffi:ref js:this "x" "scale") (ffi:ref js:this "strafe"))
-          ((ffi:ref js:this "heading" "add") (ffi:ref js:this "x"))))
+          ((ffi:ref (ffi:ref js:this "x") "scale") (ffi:ref js:this "strafe"))
+          ((ffi:ref (ffi:ref js:this "heading") "add") (ffi:ref js:this "x"))))
 
-    (if (> ((ffi:ref js:this "heading" "length")) 0.0001)
+    (if (> ((ffi:ref (ffi:ref js:this "heading") "length")) 0.0001)
         (progn
-          ((ffi:ref js:this "magnitude" "set") (ffi:ref js:this "forward") (ffi:ref js:this "strafe"))
-          ((ffi:ref ((ffi:ref js:this "heading" "normalize")) "scale") ((ffi:ref js:this "magnitude" "length")))))
+          ((ffi:ref (ffi:ref js:this "magnitude") "set") (ffi:ref js:this "forward") (ffi:ref js:this "strafe"))
+          ((ffi:ref ((ffi:ref (ffi:ref js:this "heading") "normalize")) "scale") ((ffi:ref (ffi:ref js:this "magnitude") "length")))))
 
     (if (ffi:ref js:this "jump")
         (progn
           ((ffi:ref js:this "entity" "script" "charcontroller" "jump"))
           (js-setf (js:this "jump") nil)))
 
-    ((ffi:ref js:this "entity" "script" "charcontroller" "move") (ffi:ref js:this "heading"))
+    ((ffi:ref (ffi:ref js:this "entity" "script" "charcontroller") "move") (ffi:ref js:this "heading"))
 
     (let ((pos ((ffi:ref js:this "camera" "getPosition"))))
       ((ffi:ref js:this "app" "fire") #j"cameramove" pos)))
@@ -161,13 +161,14 @@
                                 (39 ((ffi:ref app "fire") #j"firstperson:strafe" value))
                                 (68 ((ffi:ref app "fire") #j"firstperson:strafe" value)))))
            (key-down (lambda (e)
-                       (if (not (ffi:ref e "repeat"))
+                       (if (not (eql (ffi:ref e "repeat") js:true))
                            (progn
-                             (update-movement (ffi:ref e "keyCode") 1)
+                             (js:console.log #j"second keydown")
+                             (funcall update-movement (ffi:ref e "keyCode") 1)
                              (if (eql (ffi:ref e "keyCode") 32)
                                  ((ffi:ref app "fire") #j"firstperson:jump"))))))
            (key-up (lambda (e)
-                     (update-movement (ffi:ref e "keyCode") 0)))
+                     (funcall update-movement (ffi:ref e "keyCode") 0)))
 
            (add-event-listeners (lambda ()
                                   (#j:window:addEventListener #j"keydown" key-down t)
@@ -178,7 +179,7 @@
       ((ffi:ref js:this "on") #j"enable" add-event-listeners)
       ((ffi:ref js:this "on") #j"disable" remove-event-listeners)
 
-      (add-event-listeners)))
+      (funcall add-event-listeners)))
 
   (defparameter reset (create-script "reset"))
 
@@ -204,9 +205,9 @@
           ((ffi:ref app "fire") #j"firstperson_reset")))))
 
 (add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
-(add-scripts box '("charcontroller" "firstpersoncamera"))
+(add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput"))
 (remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
-(remove-scripts box '("charcontroller" "firstpersoncamera"))
+(remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput"))
 (js:console.log (ffi:ref char-controller "attributes"))
 (js:console.log #jbox)
 
