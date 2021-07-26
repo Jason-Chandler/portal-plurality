@@ -8,6 +8,7 @@
   (defprotomethod initialize char-controller (_)
     (js-setf (js:this "groundCheckRay") (vec3 :x 0 :y -0.5 :z 0)
              (js:this "rayEnd") (vec3)
+             (js:this "groundNormal") (vec3)
              (js:this "onGround") t
              (js:this "jumping") nil))
 
