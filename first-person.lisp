@@ -32,7 +32,51 @@
           (js-setf (js:this "onGround") nil
                    (js:this "jumping") t)
           (js:set-timeout ((ffi:ref (lambda () (js-setf (js:this "jumping") nil))
-                                    "bind") js:this) 500)))))
+                                    "bind") js:this) 500))))
+
+  (defprotomethod update char-controller (dt)
+    (let ((pos ((ffi:ref js:this "entity" "getPosition"))))
+      ((ffi:ref js:this "rayEnd" "add2") pos (ffi:ref js:this "groundCheckRay"))
+      (let ((result ((ffi:ref js:this "app" "systems" "rigidbody" "raycastFirst") pos (ffi:ref js:this "rayEnd"))))
+          (js-setf (js:this "onGround") result)
+          (if result
+              ((ffi:ref js:this "groundNormal" "copy") (ffi:ref result "normal"))))))
+
+  (defparameter fps-cam (create-script "firstpersoncamera"))
+  
+  (add-attribute fps-cam "camera" 
+                 :type #j"entity"
+                 :title #j"camera"
+                 :description #j"Camera for fps view. Should be child of script's parent entity")
+  
+  (defprotomethod initialize fps-cam (_)
+    (let ((app (ffi:ref js:this "app")))
+      (if (not (ffi:ref js:this "camera"))
+          (progn
+            (js-setf (js:this "camera") (new "Entity" #j"fps camera"))
+            ((ffi:ref js:this "camera" "addComponent") "camera")
+            ((ffi:ref js:this "entity" "addChild") (ffi:ref js:this "camera"))))
+      (js-setf (js:this "x") (vec3)
+               (js:this "z") (vec3)
+               (js:this "heading") (vec3)
+               (js:this "magnitude") (new "Vec2")
+               (js:this "azimuth") 0
+               (js:this "elevation") 0
+               (js:this "camera" "camera" "enabled") t)
+      (let ((temp ((ffi:ref js:this "camera" "forward" "clone"))))
+        (js-setf (temp "y") 0)
+        ((ffi:ref temp "normalize"))
+        (js-setf (js:this "azimuth") (* ((ffi:ref "Math" "atan2") (- (ffi:ref temp "x"))
+                                                                  (- (ffi:ref temp "z")))
+                                        (/ 180 (ffi:ref "Math" "PI"))))
+        (let ((rot ((ffi:ref (new "Mat4")) "setFromAxisAngle" (ffi:ref js:pc "Vec3" "UP")
+                                           (- (ffi:ref js:this "azimuth")))))
+          (js-setf (js:this elevation) (* ((ffi:ref "Math" atan) (ffi:ref temp "y") (ffi:ref temp "z"))
+                                          (/ 180 (ffi:ref "Math" "PI"))))
+          (js-setf (js:this "forward") 0
+                   (js:this "strafe") 0
+                   (js:this "jump") nil
+                   (js:this "cnt") 0))))))
 
 (add-scripts box '("charcontroller"))
 (remove-scripts box '("charcontroller"))
