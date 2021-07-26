@@ -16,7 +16,7 @@
     (if (and (ffi:ref js:this "onGround")
              (not (ffi:ref js:this "jumping")))
         (let ((tmp (vec3))
-              (len (ffi:ref direction "length")))
+              (len ((ffi:ref direction "length"))))
           (if (> len 0)
               (progn
                 ((ffi:ref 
@@ -52,10 +52,10 @@
   
   (defprotomethod initialize fps-cam (_)
     (let ((app (ffi:ref js:this "app")))
-      (if (not (ffi:ref js:this "camera"))
+      (if (eql (ffi:ref js:this "camera") js:null)
           (progn
             (js-setf (js:this "camera") (ffi:new (ffi:ref "pc.Entity") #j"fps camera"))
-            ((ffi:ref js:this "camera" "addComponent") "camera")
+            ((ffi:ref js:this "camera" "addComponent") #j"camera")
             ((ffi:ref js:this "entity" "addChild") (ffi:ref js:this "camera"))))
       (js-setf (js:this "x") (vec3)
                (js:this "z") (vec3)
@@ -70,7 +70,7 @@
         (js-setf (js:this "azimuth") (* ((ffi:ref "Math" "atan2") (- (ffi:ref temp "x"))
                                                                   (- (ffi:ref temp "z")))
                                         (/ 180 (ffi:ref "Math" "PI"))))
-        (let ((rot ((ffi:ref (ffi:new (ffi:ref "pc.Mat4"))) "setFromAxisAngle" (ffi:ref js:pc "Vec3" "UP")
+        (let ((rot ((ffi:ref (ffi:new (ffi:ref "pc.Mat4")) "setFromAxisAngle") (ffi:ref js:pc "Vec3" "UP")
                                            (- (ffi:ref js:this "azimuth")))))
           (js-setf (js:this elevation) (* ((ffi:ref "Math" atan) (ffi:ref temp "y") (ffi:ref temp "z"))
                                           (/ 180 (ffi:ref "Math" "PI"))))
@@ -204,9 +204,9 @@
           ((ffi:ref app "fire") #j"firstperson_reset")))))
 
 (add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
-(add-scripts box '("charcontroller"))
+(add-scripts box '("charcontroller" "firstpersoncamera"))
 (remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
-(remove-scripts box '("charcontroller"))
+(remove-scripts box '("charcontroller" "firstpersoncamera"))
 (js:console.log (ffi:ref char-controller "attributes"))
 (js:console.log #jbox)
 
