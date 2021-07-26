@@ -146,9 +146,63 @@
 
   (defparameter keyboard-input (create-script "keyboardinput"))
 
-  )
+  (defprotomethod initialize keyboard-input (_)
+    (let* ((app (ffi:ref js:this "app"))
+           (update-movement (lambda (key-code value)
+                              (case key-code
+                                (27 ((ffi:ref app "fire") #j"firstperson:unlock"))
+                                (38 ((ffi:ref app "fire") #j"firstperson:forward" value))
+                                (87 ((ffi:ref app "fire") #j"firstperson:forward" value))
+                                (40 ((ffi:ref app "fire") #j"firstperson:forward" (- value)))
+                                (83 ((ffi:ref app "fire") #j"firstperson:forward" (- value)))
+                                (37 ((ffi:ref app "fire") #j"firstperson:strafe" (- value)))
+                                (65 ((ffi:ref app "fire") #j"firstperson:strafe" (- value)))
+                                (39 ((ffi:ref app "fire") #j"firstperson:strafe" value))
+                                (68 ((ffi:ref app "fire") #j"firstperson:strafe" value)))))
+           (key-down (lambda (e)
+                       (if (not (ffi:ref e "repeat"))
+                           (progn
+                             (update-movement (ffi:ref e "keyCode") 1)
+                             (if (eql (ffi:ref e "keyCode") 32)
+                                 ((ffi:ref app "fire") #j"firstperson:jump"))))))
+           (key-up (lambda (e)
+                     (update-movement (ffi:ref e "keyCode") 0)))
 
-(add-scripts box '("charcontroller"))
+           (add-event-listeners (lambda ()
+                                  (#j:window:addEventListener #j"keydown" key-down t)
+                                  (#j:window:addEventListener #j"keyup" key-up t)))
+           (remove-event-listeners (lambda ()
+                                     (#j:window:removeEventListener #j"keydown" key-down t)
+                                     (#j:window:removeEventListener #j"keyup" key-up t))))
+      ((ffi:ref js:this "on") #j"enable" add-event-listeners)
+      ((ffi:ref js:this "on") #j"disable" remove-event-listeners)
+
+      (add-event-listeners)))
+
+  (defparameter reset (create-script "reset"))
+
+  (defprotomethod initialize reset (_)
+    (let* ((app (ffi:ref js:this "app"))
+           (rb (ffi:ref js:this "entity" "rigidbody"))
+           (pos ((ffi:ref js:this "entity" "getPosition")))
+           (pos-x (ffi:ref pos "x"))
+           (pos-y (ffi:ref pos "y"))
+           (pos-z (ffi:ref pos "z"))
+           (on-reset (lambda (e)
+                       ((ffi:ref rb "teleport") pos-x pos-y pos-z)
+                       (js-setf (rb "linearVelocity") #j:pc:Vec3:ZERO
+                                (rb "angularVelocity") #j:pc:Vec3:ZERO))))
+      ((ffi:ref app "on") #j"firstperson:reset"
+                          on-reset
+                          js:this)))
+
+  (defprotomethod update reset (dt)
+    (let ((app (ffi:ref js:this "app"))
+          (pos (ffi:ref js:this "entity" "position")))
+      (if (< (ffi:ref pos "y") -25)
+          ((ffi:ref app "fire") #j"firstperson_reset")))))
+
+(add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
 (remove-scripts box '("charcontroller"))
 (js:console.log (ffi:ref char-controller "attributes"))
 (js:console.log #jbox)
