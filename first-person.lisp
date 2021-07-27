@@ -51,6 +51,7 @@
                  :description #j"Camera for fps view. Should be child of script's parent entity")
   
   (defprotomethod initialize fps-cam (_)
+    (js:console.log #j"cam initialized")
     (let ((app (ffi:ref js:this "app")))
       (if (eql (ffi:ref js:this "camera") js:null)
           (progn
@@ -91,21 +92,21 @@
 
           ((ffi:ref app "on") #j"firstperson:look"
                               (lambda (azimuth-delta elevation-delta &rest placeholders)
-                                (incf (ffi:ref js:this "azimuth") azimuth-delta)
-                                (incf (ffi:ref js:this "elevation") elevation-delta)
-                                (js-setf (js:this "elevation") ((ffi:ref js:pc "math" "clamp") (ffi:ref js:this "elevation")
+                                (js-setf (js:this "azimuth") (+ (ffi:ref js:this "azimuth") azimuth-delta)
+                                         (js:this "elevation") (+ (ffi:ref js:this "elevation") elevation-delta))
+                                (js-setf (js:this "elevation") ((ffi:ref (ffi:ref js:pc "math") "clamp") (ffi:ref js:this "elevation")
                                                                                                        -90
                                                                                                        90)))
                               js:this)
 
           ((ffi:ref app "on") #j"firstperson:jump"
-                              (lambda ()
+                              (lambda (&rest placeholders)
                                 (js-setf (js:this "jump") t))
                               js:this)
 
           ((ffi:ref app "on") #j"firstperson:unlock"
-                              (lambda ()
-                                (js-setf (js:document "pointerLockElement") nil))
+                              (lambda (&rest placeholders)
+                                (funcall (ffi:ref app "mouse" "disablePointerLock")))
                               js:this)))))
 
   (defprotomethod post-update fps-cam (dt)
@@ -163,22 +164,49 @@
            (key-down (lambda (e)
                        (if (not (eql (ffi:ref e "repeat") js:true))
                            (progn
-                             (js:console.log #j"second keydown")
                              (funcall update-movement (ffi:ref e "keyCode") 1)
                              (if (eql (ffi:ref e "keyCode") 32)
                                  ((ffi:ref app "fire") #j"firstperson:jump"))))))
            (key-up (lambda (e)
                      (funcall update-movement (ffi:ref e "keyCode") 0)))
 
-           (add-event-listeners (lambda ()
+           (add-event-listeners (lambda (&rest placeholders)
                                   (#j:window:addEventListener #j"keydown" key-down t)
                                   (#j:window:addEventListener #j"keyup" key-up t)))
-           (remove-event-listeners (lambda ()
+           (remove-event-listeners (lambda (&rest placeholders)
                                      (#j:window:removeEventListener #j"keydown" key-down t)
                                      (#j:window:removeEventListener #j"keyup" key-up t))))
       ((ffi:ref js:this "on") #j"enable" add-event-listeners)
       ((ffi:ref js:this "on") #j"disable" remove-event-listeners)
 
+      (funcall add-event-listeners)))
+
+  (defparameter mouse-input (create-script "mouseinput"))
+
+  (defprotomethod initialize mouse-input (_)
+    (let* ((app (ffi:ref js:this app))
+           (canvas (ffi:ref app "graphicsDevice" "canvas"))
+           (mouse-down (lambda (e)
+                         (if (and (not (eql #j:document:pointerLockElement canvas))
+                                  (ffi:ref canvas "requestPointerLock"))
+                             (progn
+                               ((ffi:ref app "mouse" "enablePointerLock"))))))
+           (mouse-move (lambda (e)
+                         (if (eql #j:document:pointerLockElement #j:document:body)
+                             (progn
+                               (setf movement-x (or (ffi:ref e "movementX") (ffi:ref e "webkitMovementX") (ffi:ref e "mozMovementX") 0)
+                                     movement-y (or (ffi:ref e "movementY") (ffi:ref e "webkitMovementY") (ffi:ref e "mozMovementY") 0))
+                               ((ffi:ref app "fire") #j"firstperson:look" (/ (- movement-x) 8) (/ (- movement-y) 8))))))
+
+           (add-event-listeners (lambda (&rest placeholders)
+                                  (#j:window:addEventListener #j"mousedown" mouse-down nil)
+                                  (#j:window:addEventListener #j"mousemove" mouse-move nil)))
+           (remove-event-listeners (lambda (&rest placeholders)
+                                     (#j:window:removeEventListener #j"mousedown" mouse-down nil)
+                                     (#j:window:removeEventListener #j"mousemove" mouse-move nil))))
+      ((ffi:ref js:this "on") #j"enable" add-event-listeners)
+      ((ffi:ref js:this "on") #j"disable" remove-event-listeners)
+      
       (funcall add-event-listeners)))
 
   (defparameter reset (create-script "reset"))
@@ -205,9 +233,9 @@
           ((ffi:ref app "fire") #j"firstperson_reset")))))
 
 (add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
-(add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput"))
+(add-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "mouseinput"))
 (remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "reset"))
-(remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput"))
+(remove-scripts box '("charcontroller" "firstpersoncamera" "keyboardinput" "mouseinput"))
 (js:console.log (ffi:ref char-controller "attributes"))
 (js:console.log #jbox)
 
@@ -218,4 +246,5 @@
 
 (js:console.log char-controller)
 
+(js:console.log (eql js:undefined js:undefined))
 

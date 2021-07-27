@@ -24,6 +24,20 @@
            ((ffi:ref js:pc ,obj-type "prototype" "constructor" "call") this ,@args)
            this))))
 
+;; not needed
+(defmacro js-or (&rest args)
+  (flet ((expand-list (arg-list) 
+           (mapcar #'(lambda (arg)
+                       `(if (or 
+                             (not (eql ,arg js:undefined))
+                             (not (eql ,arg js:false))
+                             (not (eql ,arg js:null)))
+                            (progn 
+                              (js:console.log ,arg)
+                              ,arg)))
+                   arg-list)))
+    `(or ,@(funcall #'expand-list args))))
+
 (defun vec3 (&key (x 0) (y 0) (z 0))
   (ffi:new (ffi:ref "pc.Vec3") x y z))
 
@@ -33,7 +47,7 @@
                `(ffi:set (ffi:ref ,@(car pair)) ,(cadr pair))
                `(setf ,(car pair) ,(cadr pair)))))
     `(progn ,@(mapcar #'set-pair (loop for (key value) on forms by #'cddr
-                                     collect (list key value))))))q
+                                     collect (list key value))))))
    
 (defun add-scripts (ent script-list)
   (loop for script in script-list
