@@ -25,7 +25,7 @@
                 ((ffi:ref ((ffi:ref tmp normalize)) scale) (* len (ffi:ref js:this speed)))))
           (js-setf (js:this "entity" "rigidbody" "linearVelocity") tmp))))
 
-  (defprotomethod jump char-controller (_)
+  (defprotomethod jump char-controller ()
     (if (and (ffi:ref js:this "onGround")
              (not (ffi:ref js:this "jumping")))
         (progn
@@ -51,7 +51,6 @@
                  :description #j"Camera for fps view. Should be child of script's parent entity")
   
   (defprotomethod initialize fps-cam (_)
-    (js:console.log #j"cam initialized")
     (let ((app (ffi:ref js:this "app")))
       (if (eql (ffi:ref js:this "camera") js:null)
           (progn
@@ -68,16 +67,17 @@
       (let ((temp ((ffi:ref js:this "camera" "forward" "clone"))))
         (js-setf (temp "y") 0)
         ((ffi:ref temp "normalize"))
-        (js-setf (js:this "azimuth") (* ((ffi:ref "Math" "atan2") (- (ffi:ref temp "x"))
-                                                                  (- (ffi:ref temp "z")))
-                                        (/ 180 (ffi:ref "Math" "PI"))))
+        (js-setf (js:this "azimuth") (* ((ffi:ref #j:Math "atan2") (- 0 (ffi:ref temp "x"))
+                                                                  (- 0 (ffi:ref temp "z")))
+                                        (/ 180 (ffi:ref #j:Math "PI"))))
         (let ((rot ((ffi:ref (ffi:new (ffi:ref "pc.Mat4")) "setFromAxisAngle") (ffi:ref js:pc "Vec3" "UP")
-                                           (- (ffi:ref js:this "azimuth")))))
-          (js-setf (js:this elevation) (* ((ffi:ref "Math" atan) (ffi:ref temp "y") (ffi:ref temp "z"))
-                                          (/ 180 (ffi:ref "Math" "PI"))))
+                                           (- 0 (ffi:ref js:this "azimuth")))))
+          ((ffi:ref rot "transformVector") (ffi:ref js:this "camera" "forward") temp)
+          (js-setf (js:this "elevation") (* ((ffi:ref #j:Math "atan") (ffi:ref temp "y") (ffi:ref temp "z"))
+                                            (/ 180 (ffi:ref #j:Math "PI"))))
           (js-setf (js:this "forward") 0
                    (js:this "strafe") 0
-                   (js:this "jump") nil
+                   (js:this "canJump") nil
                    (js:this "cnt") 0)
 
           ((ffi:ref app "on") #j"firstperson:forward"
@@ -101,7 +101,7 @@
 
           ((ffi:ref app "on") #j"firstperson:jump"
                               (lambda (&rest placeholders)
-                                (js-setf (js:this "jump") t))
+                                (js-setf (js:this "canJump") t))
                               js:this)
 
           ((ffi:ref app "on") #j"firstperson:unlock"
@@ -119,7 +119,7 @@
     ((ffi:ref js:this "x" "copy") (ffi:ref js:this "camera" "right"))
     (js-setf (js:this "x" "y") 0)
     ((ffi:ref js:this "x" "normalize"))
-    ((ffi:ref js:this "heading" "set") 0 0 0)
+    ((ffi:ref (ffi:ref js:this "heading") "set") 0 0 0)
 
     (if (not (zerop (ffi:ref js:this "forward")))
         (progn
@@ -136,10 +136,10 @@
           ((ffi:ref (ffi:ref js:this "magnitude") "set") (ffi:ref js:this "forward") (ffi:ref js:this "strafe"))
           ((ffi:ref ((ffi:ref (ffi:ref js:this "heading") "normalize")) "scale") ((ffi:ref (ffi:ref js:this "magnitude") "length")))))
 
-    (if (ffi:ref js:this "jump")
+    (if (ffi:ref js:this "canJump")
         (progn
           ((ffi:ref js:this "entity" "script" "charcontroller" "jump"))
-          (js-setf (js:this "jump") nil)))
+          (js-setf (js:this "canJump") nil)))
 
     ((ffi:ref (ffi:ref js:this "entity" "script" "charcontroller") "move") (ffi:ref js:this "heading"))
 
@@ -194,16 +194,19 @@
            (mouse-move (lambda (e)
                          (if (eql #j:document:pointerLockElement #j:document:body)
                              (progn
-                               (setf movement-x (or (ffi:ref e "movementX") (ffi:ref e "webkitMovementX") (ffi:ref e "mozMovementX") 0)
-                                     movement-y (or (ffi:ref e "movementY") (ffi:ref e "webkitMovementY") (ffi:ref e "mozMovementY") 0))
-                               ((ffi:ref app "fire") #j"firstperson:look" (/ (- movement-x) 8) (/ (- movement-y) 8))))))
+                               (js:console.log e)
+                               (ffi:set (ffi:ref js:this "movementX") (or (ffi:ref e "movementX") (ffi:ref e "webkitMovementX") (ffi:ref e "mozMovementX") 0))
+                               (ffi:set (ffi:ref js:this "movementY") (or (ffi:ref e "movementY") (ffi:ref e "webkitMovementY") (ffi:ref e "mozMovementY") 0))
+                               (js:console.log (ffi:ref js:this "movementX"))
+                               (js:console.log (ffi:ref js:this "movementY"))
+                               ((ffi:ref app "fire") #j"firstperson:look" (/ (- 0 (ffi:ref js:this "movementX")) 8) (/ (- 0 (ffi:ref js:this "movementY")) 8))))))
 
            (add-event-listeners (lambda (&rest placeholders)
-                                  (#j:window:addEventListener #j"mousedown" mouse-down nil)
-                                  (#j:window:addEventListener #j"mousemove" mouse-move nil)))
+                                  (#j:window:addEventListener #j"mousedown" mouse-down js:false)
+                                  (#j:window:addEventListener #j"mousemove" mouse-move js:false)))
            (remove-event-listeners (lambda (&rest placeholders)
-                                     (#j:window:removeEventListener #j"mousedown" mouse-down nil)
-                                     (#j:window:removeEventListener #j"mousemove" mouse-move nil))))
+                                     (#j:window:removeEventListener #j"mousedown" mouse-down js:false)
+                                     (#j:window:removeEventListener #j"mousemove" mouse-move js:false))))
       ((ffi:ref js:this "on") #j"enable" add-event-listeners)
       ((ffi:ref js:this "on") #j"disable" remove-event-listeners)
       
@@ -248,3 +251,11 @@
 
 (js:console.log (eql js:undefined js:undefined))
 
+                                (js:console.log #j"azimuth")
+                                (js:console.log (ffi:ref js:this "azimuth"))
+                                (js:console.log #j"elevation")
+                                (js:console.log (ffi:ref js:this "elevation"))
+                                (js:console.log #j"clamp")
+                                (js:console.log ((ffi:ref (ffi:ref js:pc "math") "clamp") (ffi:ref js:this "elevation")
+                                                                                             -90
+                                                                                             90))

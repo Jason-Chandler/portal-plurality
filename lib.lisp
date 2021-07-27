@@ -28,7 +28,7 @@
 (defmacro js-or (&rest args)
   (flet ((expand-list (arg-list) 
            (mapcar #'(lambda (arg)
-                       `(if (or 
+                       `(if (and 
                              (not (eql ,arg js:undefined))
                              (not (eql ,arg js:false))
                              (not (eql ,arg js:null)))
