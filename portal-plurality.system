@@ -4,5 +4,6 @@
   :serial t
   :components ((:file "package")
                (:file "lib")
+               (:file "first-person")
                (:file "main"))
   :depends-on ("react-utilities"))

@@ -11,4 +11,12 @@
 (defparameter box (find-by-name "Box"))
 (add-component box "script")
 
+(js-setf (box rigidbody mass) 3)
+
+(add-scripts box '("charcontroller" 
+                   "firstpersoncamera" 
+                   "keyboardinput" 
+                   "mouseinput" 
+                   "reset"))
+
 (setup '<app> "root" :remote-eval t)
