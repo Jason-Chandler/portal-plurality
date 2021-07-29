@@ -6,7 +6,7 @@
 (add-attribute char-controller "jumpForce" :type #j"number" :default 5)
 
 (defprotomethod initialize char-controller (_)
-  (js-setf (js:this "groundCheckRay") (vec3 :x 0 :y -0.5 :z 0)
+  (js-setf (js:this "groundCheckRay") (vec3 :x 0 :y -1.2 :z 0)
            (js:this "rayEnd") (vec3)
            (js:this "groundNormal") (vec3)
            (js:this "onGround") t
@@ -26,7 +26,7 @@
         (js-setf (js:this "entity" "rigidbody" "linearVelocity") tmp))))
 
 (defprotomethod jump char-controller ()
-  (if (and (ffi:ref js:this "onGround")
+  (if (and (not (eql (ffi:ref js:this "onGround") js:null))
            (not (ffi:ref js:this "jumping")))
       (progn
         ((ffi:ref js:this "entity" "rigidbody" "applyImpulse") 0 (ffi:ref js:this "jumpForce") 0)
@@ -40,6 +40,8 @@
     ((ffi:ref js:this "rayEnd" "add2") pos (ffi:ref js:this "groundCheckRay"))
     (let ((result ((ffi:ref js:this "app" "systems" "rigidbody" "raycastFirst") pos (ffi:ref js:this "rayEnd"))))
       (js-setf (js:this "onGround") result)
+      (if (not (ffi:ref js:this "jumping"))
+          (#j:this:entity:rigidbody:applyForce (vec3 :x 0 :y -200 :z 0)))
       (if (not (eql  result js:null))
           ((ffi:ref js:this "groundNormal" "copy") (ffi:ref result "normal"))))))
 

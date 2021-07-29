@@ -6,17 +6,17 @@
 (define-react-component <app> ()
   (jsx (:h1 () "")))
 
-(js:console.log (ffi:object :a 3 :b 4))
+(defparameter player (find-by-name "PLAYER"))
+(add-component player "script")
 
-(defparameter box (find-by-name "Box"))
-(add-component box "script")
+(js-setf (player rigidbody mass) 1
+         (player rigidbody angular-factor) (ffi:ref js:pc -vec3 -z-e-r-o)
+         (player rigidbody restitution) 0.1)
 
-(js-setf (box rigidbody mass) 3)
-
-(add-scripts box '("charcontroller" 
-                   "firstpersoncamera" 
-                   "keyboardinput" 
-                   "mouseinput" 
-                   "reset"))
+(add-scripts player '("charcontroller" 
+                      "firstpersoncamera" 
+                      "keyboardinput" 
+                      "mouseinput" 
+                      "reset"))
 
 (setup '<app> "root" :remote-eval t)
