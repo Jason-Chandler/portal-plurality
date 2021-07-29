@@ -1,1 +1,2 @@
-ammo*.js linguist-detectable=false
+ammo.*js linguist-detectable=false
+playcanvas.*js linguist-detectable=false
