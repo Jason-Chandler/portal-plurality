@@ -13,7 +13,6 @@
          (player rigidbody angular-factor) (ffi:ref js:pc -vec3 -z-e-r-o)
          (player rigidbody restitution) 0.1)
 
-
 (add-scripts player '("charcontroller" 
                       "firstpersoncamera" 
                       "keyboardinput" 

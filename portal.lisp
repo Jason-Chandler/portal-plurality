@@ -23,10 +23,17 @@
       (t (error "Alignment must be x, y, or z")))))
 
 (defun scale-by-alignment (ring alignment)
-  (ffi:set (ffi:ref ring scale) (case alignment 
+  (ffi:set (ffi:ref ring local-scale) (case alignment 
                                         ('x (vec3 :x 0.1 :y 5 :z 1))
                                         ('y (vec3 :x 5 :y 0.1 :z 1))
                                         ('z (vec3 :x 1 :y 5 :z 0.1))
+                                        (t (error "Alignment must be x, y, or z")))))
+
+(defun extents-by-alignment (ring-coll alignment)
+  (ffi:set (ffi:ref ring-coll half-extents) (case alignment 
+                                        ('x (vec3 :x 0.05 :y 2.5 :z 0.5))
+                                        ('y (vec3 :x 2.5 :y 0.05 :z 0.5))
+                                        ('z (vec3 :x 0.5 :y 2.5 :z 0.05))
                                         (t (error "Alignment must be x, y, or z")))))
 
 (defun make-ring (start-vec end-vec alignment)
@@ -36,15 +43,16 @@
     ((ffi:ref ring add-component) #j"model")
     (ffi:set (ffi:ref ring model type) #j"sphere")
     ((ffi:ref ring add-component) #j"collision")
+    (ffi:set (ffi:ref ring collision type) #j"box")
     (scale-by-alignment ring alignment)
+    (extents-by-alignment (ffi:ref ring collision) alignment)
     ((ffi:ref ring collision on) #j"triggerenter" (lambda (ent &rest _) (teleport-to-alt ent ring-name _)) ring)
     ((ffi:ref js:pc app root add-child) ring)
+    ((ffi:ref ring translate) start-vec)
     (setf *active-portals* (cons ring-name (cons end-vec-final *active-portals*)))))
 
 (defun make-portal (start-vec end-vec alignment &key two-way)
   (make-ring start-vec end-vec alignment)
   (if two-way
       (make-ring end-vec start-vec alignment)))
-
-
 
