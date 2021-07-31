@@ -62,3 +62,17 @@
 
 (defun find-by-name (name)
   (js:pc.app.root.find-by-name #jname))
+
+(defmacro add-child (obj)
+  ((ffi:ref js:pc app root add-child) obj))
+
+(defun on-collision-start (ent fun)
+  ((ffi:ref ent collision on) #j"collisionstart" fun ent))
+
+(defun on-trigger-enter (ent fun)
+  ((ffi:ref ent collision on) #j"triggerenter" fun ent))
+
+(defun teleport (ent &key x y z)
+  (ffi:set (ffi:ref ent rigidbody linear-velocity) (ffi:ref js:pc -vec3 -z-e-r-o))
+  (ffi:set (ffi:ref ent rigidbody angular-velocity) (ffi:ref js:pc -vec3 -z-e-r-o))
+  ((ffi:ref ent rigidbody teleport) (ffi:new (ffi:ref "pc.Vec3") x y z)))
