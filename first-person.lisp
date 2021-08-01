@@ -2,7 +2,7 @@
 
 ;; This file is an abomination and overuses ffi. Will fix it someday.
 (defparameter char-controller (create-script "charcontroller"))
-(add-attribute char-controller "speed" :type #j"number" :default 4)
+(add-attribute char-controller "speed" :type #j"number" :default 25)
 (add-attribute char-controller "jumpForce" :type #j"number" :default 5)
 
 (defprotomethod initialize char-controller (_)

@@ -8,6 +8,9 @@
 
 (defparameter player (find-by-name "PLAYER"))
 (add-component player "script")
+(defparameter light (find-by-name "LIGHT"))
+(js-setf (light light shadow-distance) 100
+         (light light shadow-resolution) 2048)
 
 (js-setf (player rigidbody mass) 1
          (player rigidbody angular-factor) (ffi:ref js:pc -vec3 -z-e-r-o)

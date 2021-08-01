@@ -1,5 +1,9 @@
 (in-package :portal-plurality)
 
+(defparameter *dt* nil)
+
+(defparameter *update-list* nil)
+
 (defun create-script (script-name)
   (js:pc.create-script #jscript-name))
 
@@ -76,3 +80,55 @@
   (ffi:set (ffi:ref ent rigidbody linear-velocity) (ffi:ref js:pc -vec3 -z-e-r-o))
   (ffi:set (ffi:ref ent rigidbody angular-velocity) (ffi:ref js:pc -vec3 -z-e-r-o))
   ((ffi:ref ent rigidbody teleport) (ffi:new (ffi:ref "pc.Vec3") x y z)))
+
+(defun load-glb (entity path shadows &rest args)
+  ((ffi:ref entity add-component) #j"model" (ffi:object #j"type" #j"asset"
+                                                        #j"castShadows" shadows
+                                                        #j"receiveShadows" shadows))
+  ((ffi:ref js:pc app assets load-from-url) #jpath 
+                                            #j"container"
+                                            (lambda (err asset)
+                                              ((ffi:ref entity add-component) #j"animation")
+                                              (js-setf (asset preload) t
+                                                       (entity model asset) (ffi:ref asset resource model)
+                                                       (entity model animations) (ffi:ref asset resource animations)
+                                                       (entity animation assets) (ffi:ref entity model animations))
+                                              (loop for fun in args
+                                                    do (if fun 
+                                                           (funcall fun))))))
+
+(defun add-mesh-collision (entity path)
+  ((ffi:ref entity add-component) #j"collision")
+  (js-setf (entity collision type) #j"mesh")
+  ((ffi:ref js:pc app assets load-from-url) #jpath 
+                                            #j"container"
+                                            (lambda (err asset)
+                                              (js-setf (entity collision asset) (ffi:ref asset resource model)))))
+
+
+(defun load-static (path shadows &rest args)
+  (let ((ent (ffi:new (ffi:ref "pc.Entity"))))
+    (load-glb ent path shadows args)
+    (add-mesh-collision ent path)
+    ((ffi:ref ent add-component) #j"rigidbody")
+    ((ffi:ref js:pc app root add-child) ent)))
+
+(defun make-light (x y z type &key (r 1) (g 1) (b 1) (a 1))
+  (let ((ent (ffi:new (ffi:ref "pc.Entity"))))
+    ((ffi:ref js:pc app root add-child) ent)
+    ((ffi:ref ent add-component) #j"light")
+    (js-setf (ent light color) (ffi:new (ffi:ref "pc.Color") r g b a)
+             (ent light type) #jtype
+             (ent position) (vec3 :x x :y y :z z))))
+
+(defun update-dt ()
+  ((ffi:ref js:pc app on) #j"update" (lambda (dt &rest _) 
+                                       (setf *dt* dt)
+                                       (loop for (key . val) in *update-list*
+                                             do (when val (funcall val *dt*))))))
+
+(defun add-to-update (key val)
+  (push (cons key val) *update-list*))
+
+(defun remove-from-update (key)
+  (setf *update-list* (remove key *update-list* :key #'car)))

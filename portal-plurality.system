@@ -5,5 +5,7 @@
   :components ((:file "package")
                (:file "lib")
                (:file "first-person")
+               (:file "portal")
                (:file "main"))
   :depends-on ("react-utilities"))
+
