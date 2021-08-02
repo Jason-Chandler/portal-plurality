@@ -132,3 +132,6 @@
 
 (defun remove-from-update (key)
   (setf *update-list* (remove key *update-list* :key #'car)))
+
+(update-dt)
+
