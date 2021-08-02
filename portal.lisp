@@ -12,36 +12,25 @@
          (z (ffi:ref vec z)))
     (teleport ent :x x :y y :z z)))
 
-(defun add-alignment (end-vec alignment)
-  (let ((x (ffi:ref end-vec x))
-        (y (ffi:ref end-vec y))
-        (z (ffi:ref end-vec z)))
-    (case alignment
-      ('x (ffi:new (ffi:ref "pc.Vec3") (+ x 5) y z))
-      ('y (ffi:new (ffi:ref "pc.Vec3") x (+ y 5) z))
-      ('z (ffi:new (ffi:ref "pc.Vec3") x y (+ z 5)))
-      (t (error "Alignment must be x, y, or z")))))
-
 (defun scale-by-alignment (ring alignment)
   (ffi:set (ffi:ref ring local-scale) (case alignment 
-                                        ('x (vec3 :x 0.1 :y 5 :z 1))
-                                        ('y (vec3 :x 5 :y 0.1 :z 1))
-                                        ('z (vec3 :x 1 :y 5 :z 0.1))
+                                        ('x (vec3 :x 0.1 :y 5 :z 2.5))
+                                        ('y (vec3 :x 5 :y 0.1 :z 2.5))
+                                        ('z (vec3 :x 2.5 :y 5 :z 0.1))
                                         (t (error "Alignment must be x, y, or z")))))
 
 (defun extents-by-alignment (ring-coll alignment)
   (ffi:set (ffi:ref ring-coll half-extents) (case alignment 
-                                        ('x (vec3 :x 0.05 :y 2.5 :z 0.5))
-                                        ('y (vec3 :x 2.5 :y 0.05 :z 0.5))
-                                        ('z (vec3 :x 0.5 :y 2.5 :z 0.05))
+                                        ('x (vec3 :x 0.05 :y 2.5 :z 1.25))
+                                        ('y (vec3 :x 2.5 :y 0.05 :z 1.25))
+                                        ('z (vec3 :x 1.25 :y 2.5 :z 0.05))
                                         (t (error "Alignment must be x, y, or z")))))
 
 (defun make-ring (start-vec end-vec alignment)
   (let* ((ring-name (gensym))
          (ring (ffi:new (ffi:ref "pc.Entity") #j(string ring-name)))
-         (end-vec-final (add-alignment end-vec alignment)))
-    ((ffi:ref ring add-component) #j"model")
-    (ffi:set (ffi:ref ring model type) #j"sphere")
+         (end-vec-final end-vec))
+    (load-glb ring "./files/assets/portorb.glb" nil)
     ((ffi:ref ring add-component) #j"collision")
     (ffi:set (ffi:ref ring collision type) #j"box")
     (scale-by-alignment ring alignment)
@@ -49,6 +38,14 @@
     ((ffi:ref ring collision on) #j"triggerenter" (lambda (ent &rest _) (teleport-to-alt ent ring-name _)) ring)
     ((ffi:ref js:pc app root add-child) ring)
     ((ffi:ref ring translate) start-vec)
+    (make-light ring
+                (ffi:ref start-vec x)
+                (ffi:ref start-vec y)
+                (ffi:ref start-vec z)
+                "point"
+                :r (* (+ 50.0 (random 206.0)) 0.003921568627451)
+                :g (* (+ 50.0 (random 206.0)) 0.003921568627451)
+                :b (* (+ 50.0 (random 206.0)) 0.003921568627451))
     (setf *active-portals* (cons ring-name (cons end-vec-final *active-portals*)))))
 
 (defun make-portal (start-vec end-vec alignment &key two-way)

@@ -6,6 +6,7 @@
                (:file "lib")
                (:file "first-person")
                (:file "portal")
-               (:file "main"))
+               (:file "main")
+               (:file "map-setup"))
   :depends-on ("react-utilities"))
 

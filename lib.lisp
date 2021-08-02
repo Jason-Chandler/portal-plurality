@@ -95,7 +95,8 @@
                                                        (entity animation assets) (ffi:ref entity model animations))
                                               (loop for fun in args
                                                     do (if fun 
-                                                           (funcall fun))))))
+                                                           (funcall fun)))))
+  entity)
 
 (defun add-mesh-collision (entity path)
   ((ffi:ref entity add-component) #j"collision")
@@ -111,11 +112,12 @@
     (load-glb ent path shadows args)
     (add-mesh-collision ent path)
     ((ffi:ref ent add-component) #j"rigidbody")
-    ((ffi:ref js:pc app root add-child) ent)))
-
-(defun make-light (x y z type &key (r 1) (g 1) (b 1) (a 1))
-  (let ((ent (ffi:new (ffi:ref "pc.Entity"))))
     ((ffi:ref js:pc app root add-child) ent)
+    ent))
+
+(defun make-light (parent x y z type &key (r 1) (g 1) (b 1) (a 1))
+  (let ((ent (ffi:new (ffi:ref "pc.Entity"))))
+    ((ffi:ref parent add-child) ent)
     ((ffi:ref ent add-component) #j"light")
     (js-setf (ent light color) (ffi:new (ffi:ref "pc.Color") r g b a)
              (ent light type) #jtype

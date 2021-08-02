@@ -1,47 +1,26 @@
 (in-package :portal-plurality)
 
-(load-static "./files/assets/portal-maze.glb" t)
+(progn
+  (make-portal (vec3 :x -205 :y 2 :z -101) (vec3 :x -126.90 :y 2 :z -76.73) 'z)
+  (make-portal (vec3 :x -143.4 :y 2 :z -121.5) (vec3 :x -311.00 :y 2 :z -136.58) 'z)
+  (make-portal (vec3 :x -138.8 :y 2 :z -169.79) (vec3 :x -126.90 :y 2 :z -81.73) 'x)
+  (make-portal (vec3 :x -293.79 :y 2 :z -4.3) (vec3 :x -96.69 :y 2 :z -204.40) 'x)
+  (make-portal (vec3 :x -27.50 :y 2 :z -43.09) (vec3 :x -45.28 :y 2 :z -223.4) 'x)
+  (make-portal (vec3 :x -126.90 :y 2 :z -81.73) (vec3 :x -96.69 :y 2 :z -204.40)  'z)
+  (make-portal (vec3 :x -40.28 :y 2 :z -223.4) (vec3 :x -138.4 :y 2 :z -121.5) 'x)
+  (make-portal (vec3 :x -96.69 :y 2 :z -194.40) (vec3 :x -27.50 :y 2 :z -38.09) 'z)
+  (make-portal (vec3 :x -311.00 :y 2 :z -137.58) (vec3 :x -133.8 :y 2 :z -169.79) 'x)
+  (make-portal (vec3 :x -180.03 :y 2 :z -67.56) (vec3 :x -153.68 :y 20.4 :z -305.58) 'z) ;; victory
+  (make-portal (vec3 :x -178.73 :y 2 :z -191.01) (vec3 :x -143.4 :y 2 :z -116.5) 'z))
 
-(defparameter ent (ffi:new (ffi:ref "pc.Entity")))
-((ffi:ref js:pc app root add-child) ent)
+(defparameter key (load-static "./files/assets/key.glb" t))
 
-(make-portal (vec3 :x 5 :y 2 :z 0) (vec3 :x 5 :y 80 :z 0) 'x)
-
-(add-mesh-collision ent "./files/assets/testbox.glb")
-
-((ffi:ref ent add-component) #j"rigidbody")
-
-(js:console.log ent)
+((ffi:ref key rigidbody teleport) (vec3 :x -162.73 :y 19.42 :z -289))
 
 
-(teleport)
+((ffi:ref key collision on) #j"collisionstart" (lambda (ent &rest _)
+                                                 (js:alert #j"You found the key! You win!")
+                                                 (define-react-component <app> ()
+                                                 (jsx (:h1 () "YOU FOUND THE KEY! YOU WIN!")))
+                                                 ((ffi:ref js:pc app destroy))) key)
 
-(js-setf (*lamp-color* r) 0
-         (*lamp-color* g) 1
-         (*lamp-color* b) 1
-         (*lamp-color* a) 1)
-(defparameter *lamp-color* (ffi:new (ffi:ref "pc.Color") 1 1 1))
-
-(defun add-player-headlamp (&rest _)
-  (let ((ent (ffi:new (ffi:ref "pc.Entity"))))
-    (js-setf (ent position) (ffi:ref player position))
-    ((ffi:ref player add-child) ent)
-    ((ffi:ref ent add-component) #j"light")
-    (js-setf (ent light color) (ffi:new (ffi:ref "pc.Color") 1 1 1)
-             (ent light type) #j"omni")))
-
-((ffi:ref js:pc app on) #j"update" 
-                            (lambda (dt &rest _) 
-                              (js-setf (js:this position) (ffi:ref player position)))
-                            ent)
-
-(defparameter en (ffi:new (ffi:ref "pc.Entity")))
-
-(ffi:set (ffi:ref en position) (ffi:ref player position))
-((ffi:ref js:pc app root add-child) en)
-((ffi:ref en add-component) #j"light")
-(ffi:set (ffi:ref en light type) #j"omni")
-
-(js:console.log player)
-(js:console.log (ffi:ref player position))
-(add-player-headlamp)

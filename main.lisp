@@ -68,5 +68,6 @@
 (add-to-update 'color (lambda (dt)
                         (js-setf (headlamp light color) (generate-color))))
 
+(make-light (ffi:ref js:pc app root) -50 80 0 "directional")
 
-(setup '<app> "root" :remote-eval t)
+(setup '<app> "root")
