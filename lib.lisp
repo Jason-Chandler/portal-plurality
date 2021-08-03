@@ -113,7 +113,7 @@
     (add-mesh-collision ent path)
     ((ffi:ref ent add-component) #j"rigidbody")
     ((ffi:ref js:pc app root add-child) ent)
-    ent))
+    (or ent)))
 
 (defun make-light (parent x y z type &key (r 1) (g 1) (b 1) (a 1))
   (let ((ent (ffi:new (ffi:ref "pc.Entity"))))
@@ -121,7 +121,8 @@
     ((ffi:ref ent add-component) #j"light")
     (js-setf (ent light color) (ffi:new (ffi:ref "pc.Color") r g b a)
              (ent light type) #jtype
-             (ent position) (vec3 :x x :y y :z z))))
+             (ent position) (vec3 :x x :y y :z z))
+    (or ent)))
 
 (defun update-dt ()
   ((ffi:ref js:pc app on) #j"update" (lambda (dt &rest _) 
@@ -135,5 +136,16 @@
 (defun remove-from-update (key)
   (setf *update-list* (remove key *update-list* :key #'car)))
 
+(defun load-audio (entity path &rest args)
+  ((ffi:ref js:pc app assets load-from-url) #jpath 
+                                            #j"audio"
+                                            (lambda (err asset)
+                                              (js-setf (entity asset) asset))
+                                            entity)
+  (or entity))
+
+
 (update-dt)
+
+
 

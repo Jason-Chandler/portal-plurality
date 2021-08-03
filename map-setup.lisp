@@ -24,3 +24,18 @@
                                                  (jsx (:h1 () "YOU FOUND THE KEY! YOU WIN!")))
                                                  ((ffi:ref js:pc app destroy))) key)
 
+
+((ffi:ref key add-component) #j"sound")
+((ffi:ref key sound add-slot) #j"sanic")
+
+
+(defparameter *music-started* nil)
+(#j:window:addEventListener #j"keydown" (lambda (e &rest _)
+                                          (when (or (not *music-started*) (eql *music-started* js:false))
+                                            (defparameter *music* (load-audio (ffi:ref key sound slots sanic) "./files/assets/ssr.mp3"))
+                                            (js-setf (key sound volume) 0.2
+                                                     (*music* loop) t)
+                                            ((ffi:ref *music* play))
+                                            (setf *music-started* (ffi:ref *music* is-playing))
+                                            ((ffi:ref *music* play)))) js:false)
+
